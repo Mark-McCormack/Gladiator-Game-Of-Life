@@ -16,8 +16,6 @@ Gladiator "Game of Life" was developed to examine the emergent strategies a grou
 - Investigate what behaviours emerge that allow teams the best probability of surviving in future generations.
 - Develop a heuristic which can influence the choices each team makes.
 
-![Alt Text](https://media1.giphy.com/media/LW5vBvAb48Oe9OoEKT/source.gif)
-
 <h4>Table of Contents</h4>
 
 - [Introduction](#introduction)
@@ -34,7 +32,6 @@ Gladiator "Game of Life" was developed to examine the emergent strategies a grou
 - This project can be found at [this link](https://en.wikipedia.org/wiki/Minimax). Settings for the methods will be displayed on screen. The game will be displayed on a HTML Canvas in the center of the screen, with controls below. A detailed explanation is provided for each method beside the settings.
 
 ##### Player Choice
-![Alt Text](https://media1.giphy.com/media/LW5vBvAb48Oe9OoEKT/source.gif)
 - Selecting the "Player Choice" method will have the player setup the left side of the simulation. After confirming their choice, the A.I will use its experience from past games to play what it thinks to be the best strategy against its component.
 
 #### Links
