@@ -7,4 +7,6 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'Gladiator-Game-Of-Life';
+
+  darkTheme: boolean = false;
 }

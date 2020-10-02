@@ -1,27 +1,53 @@
-# GladiatorGameOfLife
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 9.1.5.
 
-## Development server
+<div style = "text-align: center;">
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+# Gladiator "Game of Life"
 
-## Code scaffolding
+![Angular](https://img.shields.io/badge/angular%20-%23DD0031.svg?&style=for-the-badge&logo=angular&logoColor=white) ![Node.JS](https://img.shields.io/badge/node.js%20-%2343853D.svg?&style=for-the-badge&logo=node.js&logoColor=white) ![TypeScript](https://img.shields.io/badge/typescript%20-%23007ACC.svg?&style=for-the-badge&logo=typescript&logoColor=white)
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+</div>
 
-## Build
+#### Introduction
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `--prod` flag for a production build.
+Gladiator "Game of Life" was developed to examine the emergent strategies a group of cells would develop in order to survive. Building on ["Conways Game of Life"](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life), the goals of this project were to:
 
-## Running unit tests
+- Implement Conways Game of Life, and build in the concept of teams, where the neighbours of a cell influence its team status.
+- Investigate what behaviours emerge that allow teams the best probability of surviving in future generations.
+- Develop a heuristic which can influence the choices each team makes.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+![Alt Text](https://media1.giphy.com/media/LW5vBvAb48Oe9OoEKT/source.gif)
 
-## Running end-to-end tests
+<h4>Table of Contents</h4>
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
+- [Introduction](#introduction)
+- [Description](#description)
+- [Usage](#usage)
+- [Links](#links)
 
-## Further help
+#### Description
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+- This project uses the AngularJS Framework. The project is broken up into individual components for each of the play styles. Much of the choices need minimal input from the player and run themselves. 
+
+#### Usage
+
+- This project can be found at [this link](https://en.wikipedia.org/wiki/Minimax). Settings for the methods will be displayed on screen. The game will be displayed on a HTML Canvas in the center of the screen, with controls below. A detailed explanation is provided for each method beside the settings.
+
+##### Player Choice
+![Alt Text](https://media1.giphy.com/media/LW5vBvAb48Oe9OoEKT/source.gif)
+- Selecting the "Player Choice" method will have the player setup the left side of the simulation. After confirming their choice, the A.I will use its experience from past games to play what it thinks to be the best strategy against its component.
+
+#### Links
+<h5>- Further Readings</h5>
+
+- [Inventing Game of Life with John Conway](https://www.youtube.com/watch?v=R9Plq-D1gEk): Game explained by its inventor.
+
+<h5>- References</h5>
+
+- [Conway's "Game of Life"](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) via Wikipedia
+
+- [Monte Carlo Algorithm](https://en.wikipedia.org/wiki/Monte_Carlo_algorithm) via Wikipedia
+
+- [Machine Learning](https://en.wikipedia.org/wiki/Machine_learning) via Wikipedia
+
+- [Tensorflow.JS](https://www.tensorflow.org/js) used for Machine Learning

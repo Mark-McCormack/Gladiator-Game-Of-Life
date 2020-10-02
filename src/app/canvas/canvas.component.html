@@ -1,0 +1,47 @@
+<div class = "game mat-app-background">
+  <br>
+  <div style="text-align: center;">
+    <button mat-raised-button (click)="createGrid()">Set the Board!</button>&nbsp;
+    <button mat-raised-button (click)="step(this.grid)">Move the Board!</button>&nbsp;
+    <!-- Todo get the loop function working-->
+    <button mat-raised-button (click)="loopBoard()">Loop the Board!</button>&nbsp;
+    <button mat-raised-button (click)="resetGrid()">Wipe the Board!</button>&nbsp;
+    <br />
+    <br />
+    <!--Control Unit-->
+    <mat-form-field class="form">
+      <strong>A.I Monte Carlo: </strong>
+      <input matInput type="number" [(ngModel)]="monteCarloSimulations" min="3" max="99" />
+    </mat-form-field>
+
+    <mat-form-field class="form">
+      <strong>A.I Search Depth: </strong>
+      <input matInput type="number" [(ngModel)]="turns" min="3" max="99" />
+    </mat-form-field>
+
+    <mat-form-field class="form">
+      <strong>Cell Spawn Rate: </strong>
+      <input matInput type="number" [(ngModel)]="spawnrate" min="0" max="1" />
+    </mat-form-field>
+
+    <!-- Spacing-->
+    <br />
+    <br />
+    
+    <!-- Game of Life Unit-->
+    <canvas id="board" width="500px" height="500px" style="border: 1px solid #000000;"></canvas>
+  </div>
+</div>
+<div class = "info mat-app-background">
+  <br>
+  <div class = "card">
+    <h1>Gladiator Game of Life</h1>
+    <p>This project uses Conway's "Game of Life" to study how two groups of cells will interact and who will survive. You can set the board to generate two teams and use either the "Step" or "Loop" buttons to watch the game play out.</p>
+    <h3>What does this project do?</h3>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+    <h3>What is the purpose of this project?</h3>
+    <p>The main goal for this project was to investigate and study how cellular automata interact with one another in groups. Also, I wanted to implement Conway's "Game of Life" in a JavaScript Framework, Angular in this case.</p>
+    <h3>What are the "Upcoming Features"?</h3>
+    <p>For the future, I plan to train the cellular automata to remember patterns which led to the best outcome for different teams, as well as unique strategies for each step in the game. I also plan to implement custom patterns and multiplayer options. </p>  
+  </div>
+</div>
