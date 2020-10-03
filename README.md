@@ -29,7 +29,13 @@ Gladiator "Game of Life" was developed to examine the emergent strategies a grou
 
 #### Usage
 
-- This project can be found at [this link](https://en.wikipedia.org/wiki/Minimax). Settings for the methods will be displayed on screen. The game will be displayed on a HTML Canvas in the center of the screen, with controls below. A detailed explanation is provided for each method beside the settings.
+- After downloading this project, be sure to install the required node modules. Be sure that you have NPM installed on your machine.
+
+```shell
+npm install
+```
+
+- This project will be hosted on Github Pages soon. Settings for the methods will be displayed on screen. The game will be displayed on a HTML Canvas in the center of the screen, with controls below. A detailed explanation is provided for each method beside the settings.
 
 ##### Player Choice
 - Selecting the "Player Choice" method will have the player setup the left side of the simulation. After confirming their choice, the A.I will use its experience from past games to play what it thinks to be the best strategy against its component.
