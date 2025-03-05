@@ -1,47 +1,154 @@
-<div class = "game mat-app-background">
-  <br>
-  <div style="text-align: center;">
-    <button mat-raised-button (click)="createGrid()">Set the Board!</button>&nbsp;
-    <button mat-raised-button (click)="step(this.grid)">Move the Board!</button>&nbsp;
-    <!-- Todo get the loop function working-->
-    <button mat-raised-button (click)="loopBoard()">Loop the Board!</button>&nbsp;
-    <button mat-raised-button (click)="resetGrid()">Wipe the Board!</button>&nbsp;
-    <br />
-    <br />
-    <!--Control Unit-->
-    <mat-form-field class="form">
-      <strong>A.I Monte Carlo: </strong>
-      <input matInput type="number" [(ngModel)]="monteCarloSimulations" min="3" max="99" />
-    </mat-form-field>
+<div class="game mat-app-background">
+  <br />
+  <div style="text-align: center">
+    <button mat-raised-button color="warn" (click)="createGrid()">
+      Set the Board!
+    </button>
+    &nbsp;
+    <button mat-raised-button color="warn" (click)="step()">
+      Move the Board!
+    </button>
+    &nbsp;
+    <button mat-raised-button color="warn" (click)="loopBoard()">
+      Loop the Board!
+    </button>
+    &nbsp;
+    <button mat-raised-button color="warn" (click)="resetGrid()">
+      Wipe the Board!
+    </button>
+    &nbsp;
+    <br /><br />
 
+    <!-- AI Control Unit -->
     <mat-form-field class="form">
       <strong>A.I Search Depth: </strong>
       <input matInput type="number" [(ngModel)]="turns" min="3" max="99" />
     </mat-form-field>
-
+    &nbsp;
     <mat-form-field class="form">
       <strong>Cell Spawn Rate: </strong>
-      <input matInput type="number" [(ngModel)]="spawnrate" min="0" max="1" />
+      <input
+        matInput
+        type="number"
+        [(ngModel)]="spawnrate"
+        min="0"
+        max="1"
+        step="0.01"
+      />
     </mat-form-field>
+    <br /><br />
 
-    <!-- Spacing-->
-    <br />
-    <br />
-    
-    <!-- Game of Life Unit-->
-    <canvas id="board" width="500px" height="500px" style="border: 1px solid #000000;"></canvas>
+    <!-- AI Training & Prediction -->
+    <button mat-raised-button color="primary" (click)="trainModel()">
+      Train AI</button
+    >&nbsp;
+    <button mat-raised-button color="primary" (click)="predictOutcome(grid)">
+      Predict Outcome
+    </button>
+    &nbsp;
+    <br /><br />
+
+    <!-- Display AI Training Progress -->
+    <div *ngIf="isTraining">
+      <h3>AI Training</h3>
+      <mat-progress-bar mode="indeterminate" color="primary"></mat-progress-bar>
+      <p>{{ trainingStatus }}</p>
+    </div>
+
+    <br /><br />
+
+    <!-- Game Board -->
+    <canvas
+      id="board"
+      width="500px"
+      height="500px"
+      style="border: 1px solid #000000"
+    ></canvas>
   </div>
 </div>
-<div class = "info mat-app-background">
-  <br>
-  <div class = "card">
+
+<div class="info mat-app-background">
+  <br />
+  <div class="card">
     <h1>Gladiator Game of Life</h1>
-    <p>This project uses Conway's "Game of Life" to study how two groups of cells will interact and who will survive. You can set the board to generate two teams and use either the "Step" or "Loop" buttons to watch the game play out.</p>
-    <h3>What does this project do?</h3>
-    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-    <h3>What is the purpose of this project?</h3>
-    <p>The main goal for this project was to investigate and study how cellular automata interact with one another in groups. Also, I wanted to implement Conway's "Game of Life" in a JavaScript Framework, Angular in this case.</p>
-    <h3>What are the "Upcoming Features"?</h3>
-    <p>For the future, I plan to train the cellular automata to remember patterns which led to the best outcome for different teams, as well as unique strategies for each step in the game. I also plan to implement custom patterns and multiplayer options. </p>  
+    <p>
+      Welcome to the <strong>Gladiator Game of Life</strong>, an interactive
+      simulation inspired by Conway’s <em>Game of Life</em>. This project
+      explores how two competing groups of cells evolve and battle for survival
+      under predefined rules. You can control the board manually or let it run
+      automatically using the AI-driven simulation.
+    </p>
+
+    <h3>How Does It Work?</h3>
+    <p>
+      The game is based on a grid where each cell can be either
+      <strong>alive</strong> or <strong>dead</strong>. The cells follow simple
+      survival rules:
+    </p>
+    <ul>
+      <li>Cells with too few neighbors die from isolation.</li>
+      <li>Cells with too many neighbors die from overpopulation.</li>
+      <li>
+        Dead cells can become alive if surrounded by the right number of living
+        neighbors.
+      </li>
+    </ul>
+    <p>
+      In this version, the board is split into two competing teams:
+      <span style="color: red; font-weight: bold">Red</span> and
+      <span style="color: blue; font-weight: bold">Blue</span>. Each team fights
+      for dominance based on the rules of cellular automata.
+    </p>
+
+    <h3>Game Controls</h3>
+    <p>Use the following buttons to interact with the game:</p>
+    <ul>
+      <li>
+        <strong>Set the Board!</strong> – Generates a new randomized board with
+        Red and Blue cells.
+      </li>
+      <li><strong>Move the Board!</strong> – Advances the game by one step.</li>
+      <li>
+        <strong>Loop the Board!</strong> – Starts or stops an automatic loop
+        that continuously updates the board.
+      </li>
+      <li>
+        <strong>Wipe the Board!</strong> – Clears the board, resetting it for a
+        new simulation.
+      </li>
+    </ul>
+
+    <h3>AI-Powered Features</h3>
+    <p>
+      In addition to manual control, the project includes an
+      <strong>AI model</strong> that can analyze board states and predict
+      potential outcomes.
+    </p>
+    <ul>
+      <li>
+        <strong>AI Search Depth</strong> – Adjusts how many turns ahead the AI
+        should analyze.
+      </li>
+      <li>
+        <strong>Cell Spawn Rate</strong> – Controls how densely populated the
+        board is at the start.
+      </li>
+      <li>
+        <strong>Train AI</strong> – Runs a machine learning model to improve
+        predictions.
+      </li>
+      <li>
+        <strong>Predict Outcome</strong> – Uses AI to estimate which team is
+        likely to win.
+      </li>
+    </ul>
+
+    <h3>AI Training Progress</h3>
+    <p>
+      When the AI is training, a progress bar will appear, showing the status.
+      Training logs are available in the console for debugging.
+    </p>
+
+    <p>Enjoy the simulation and may the best team survive!</p>
   </div>
 </div>

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import * as tf from '@tensorflow/tfjs';
 
 @Component({
   selector: 'app-canvas',
@@ -12,267 +13,285 @@ export class CanvasComponent implements OnInit {
   red: boolean;
   horizontal: any;
   vertical: any;
-  monteCarloSimulations: number;
   turns: number;
-  prediction: any;
   spawnrate: any;
   loop: any;
+
+  // Training state
+  isTraining: boolean = false;
+  trainingStatus: string = '';
 
   constructor() {}
 
   ngOnInit(): void {
-    //Initialise Grid and Canvas
-    this.monteCarloSimulations = 10;
     this.turns = 2;
-    this.spawnrate = 0.20;
+    this.spawnrate = 0.3;
     this.canvas = this.createCanvas();
     this.grid = this.createGrid();
-      
   }
 
   createCanvas() {
-    //Create Canvas & Context to Draw On
     var canvas = <HTMLCanvasElement>document.getElementById('board');
     var context = canvas.getContext('2d');
-
     this.vertical = 500;
     this.horizontal = 500;
 
-    //Vertical Lines
     for (let index = 0; index < this.vertical * 20; index += 20) {
       context.moveTo(0, index);
       context.lineTo(this.vertical, index);
       context.stroke();
     }
-
-    //Horizontal Lines
     for (let index = 0; index < this.horizontal * 20; index += 20) {
       context.moveTo(index, 0);
       context.lineTo(index, this.horizontal);
       context.stroke();
     }
-
     return context;
   }
 
   createGrid() {
     clearInterval(this.loop);
-    //Make Current & Next Grid
     this.grid = [];
     this.nextGrid = [];
 
-    //Create 2D Array
     for (var i = 0; i < this.vertical / 20; i++) {
       this.grid[i] = [];
-    }
-
-    for (var i = 0; i < this.horizontal / 20; i++) {
       this.nextGrid[i] = [];
     }
 
-    //Randomly Populate the Current Grid for Player **CAN BE HALVED**
     for (var i = 0; i < this.vertical / 20; i++) {
       for (var j = 0; j < this.horizontal / 20; j++) {
-        if (i < this.horizontal / 40) {
-          this.grid[i][j] = [Math.round(Math.random() - this.spawnrate), true];
+        let isRed = Math.random() < 0.5; // 50% chance for red or blue
+        let isAlive = Math.random() < this.spawnrate; // Based on spawn rate
+
+        if (isAlive) {
+          this.grid[i][j] = [1, isRed]; // Red = true, Blue = false
+        } else {
+          this.grid[i][j] = [0, false]; // Dead cell
         }
       }
     }
 
-    //Monte Carlo populates the current grid with its best guess
-    for(var k = 0; k < this.monteCarloSimulations; k++){
-      for (var i = 0; i < this.vertical / 20; i++) {
-        for (var j = 0; j < this.horizontal / 20; j++) {
-          if (i > this.horizontal / 40) {
-            this.grid[i][j] = [Math.round(Math.random() - this.spawnrate), false];
-          }
-        }
-      }
-
-      //Monte Carlo: If Blue wins, use this setup. Else, try another config
-      if(this.monteCarlo(this.turns, this.grid)){ 
-        break;
-      }
-    }
     this.applyGrid();
     return this.grid;
+  }
+
+  resetGrid() {
+    clearInterval(this.loop);
+    this.applyGrid();
   }
 
   applyGrid() {
     for (var i = 0; i < this.vertical / 20; i++) {
       for (var j = 0; j < this.horizontal / 20; j++) {
         if (
-          //If the Cell is Dead, Colour it White
           JSON.stringify(this.grid[i][j]) == JSON.stringify([0, true]) ||
           JSON.stringify(this.grid[i][j]) == JSON.stringify([0, false])
         ) {
           this.canvas.fillStyle = '#FFFFFF';
-          this.canvas.fillRect(i * 20, j * 20, 19, 19);
         } else if (
-          //If the Cell is Alive & Red, Colour it Red
           JSON.stringify(this.grid[i][j]) == JSON.stringify([1, true])
         ) {
           this.canvas.fillStyle = '#F22B29';
-          this.canvas.fillRect(i * 20, j * 20, 19, 19);
         } else if (
-          //If the Cell is Alive & Blue, Colour it Blue
           JSON.stringify(this.grid[i][j]) == JSON.stringify([1, false])
         ) {
           this.canvas.fillStyle = '#0077B6';
-          this.canvas.fillRect(i * 20, j * 20, 19, 19);
         }
+        this.canvas.fillRect(i * 20, j * 20, 19, 19);
       }
     }
   }
 
-  loopBoard(){
-    this.loop = setInterval(() => { this.step(this.grid);}, 500);
+  async trainModel() {
+    try {
+      this.isTraining = true;
+      this.trainingStatus = 'Training in progress...';
+      console.log('Training started');
+
+      // Generate training data
+      const { inputs, labels } = await this.generateTrainingData();
+      console.log(
+        `Training data generated. Number of examples: ${inputs.length}`
+      );
+
+      // Convert training data to tensors
+      const inputTensor = tf.tensor2d(inputs);
+      const labelTensor = tf.tensor2d(labels, [labels.length, 1]);
+      console.log('Data converted to tensors');
+
+      // Build the model
+      const model = tf.sequential();
+      model.add(
+        tf.layers.dense({
+          units: 64,
+          activation: 'relu',
+          inputShape: [inputs[0].length],
+        })
+      );
+      model.add(tf.layers.dense({ units: 32, activation: 'relu' }));
+      model.add(tf.layers.dense({ units: 1, activation: 'sigmoid' }));
+
+      model.compile({
+        optimizer: 'adam',
+        loss: 'binaryCrossentropy',
+        metrics: ['accuracy'],
+      });
+      console.log('Model compiled');
+
+      // Training the model
+      await model.fit(inputTensor, labelTensor, {
+        epochs: 10,
+        batchSize: 32,
+        callbacks: {
+          onEpochEnd: (epoch, logs) => {
+            console.log(
+              `Epoch ${epoch + 1} ended. Loss: ${logs.loss.toFixed(
+                4
+              )}, Accuracy: ${logs.acc.toFixed(4)}`
+            );
+            this.trainingStatus = `Epoch ${
+              epoch + 1
+            } / 10: Loss = ${logs.loss.toFixed(
+              4
+            )}, Accuracy = ${logs.acc.toFixed(4)}`;
+          },
+          onTrainEnd: () => {
+            this.isTraining = false;
+            this.trainingStatus = 'Training complete!';
+            console.log('Training complete');
+          },
+        },
+      });
+    } catch (error) {
+      this.isTraining = false;
+      this.trainingStatus = 'Training failed!';
+      console.error('Training failed: ', error);
+    }
   }
 
-  resetGrid() {
-    //Kill all Cells in the Table
-    for (var i = 0; i < this.vertical / 20; i++) {
-      for (var j = 0; j < this.horizontal / 20; j++) {
-        this.grid[i][j] = [0, false];
+  async predictOutcome() {
+    try {
+      const model = await tf.loadLayersModel(
+        'localstorage://game-of-life-model'
+      );
+      console.log('Model loaded for prediction');
+
+      let flattenedGrid = this.flattenGrid(this.grid);
+      const inputTensor = tf.tensor2d([flattenedGrid]);
+
+      const prediction = model.predict(inputTensor) as tf.Tensor;
+      const predictedWinner = prediction.dataSync()[0] > 0.5 ? 'Red' : 'Blue';
+
+      console.log(`Predicted Winner: ${predictedWinner}`);
+      this.isTraining = true;
+      this.trainingStatus = `Predicted Winner: ${predictedWinner}`;
+    } catch (error) {
+      console.error('Prediction failed: ', error);
+    }
+  }
+
+  // Step function to advance one step in the Game of Life
+  step() {
+    console.log('Executing step...');
+    this.grid = this.stepGame(this.grid);
+    this.applyGrid(); // Refresh the canvas with the new grid state
+  }
+
+  // Loop function to keep advancing the grid at regular intervals
+  loopBoard() {
+    if (this.loop) {
+      clearInterval(this.loop);
+      this.loop = null;
+      console.log('Game loop stopped.');
+    } else {
+      this.loop = setInterval(() => {
+        this.step();
+      }, 500); // Run the step function every 500ms
+      console.log('Game loop started.');
+    }
+  }
+
+  // Helper function that simulates one step of the game
+  stepGame(grid: any[]) {
+    let newGrid = JSON.parse(JSON.stringify(grid));
+
+    for (let i = 0; i < this.vertical / 20; i++) {
+      for (let j = 0; j < this.horizontal / 20; j++) {
+        if (grid[i] && grid[i][j] && grid[i][j].length > 0) {
+          let neighbors = this.neighbour(i, j);
+
+          if (grid[i][j][0] === 1 && (neighbors < 2 || neighbors > 3)) {
+            newGrid[i][j][0] = 0; // Cell dies
+          } else if (grid[i][j][0] === 0 && neighbors === 3) {
+            newGrid[i][j][0] = 1; // Cell is born
+          }
+        }
       }
     }
 
-    //Restore the Grid Lines
-    this.applyGrid();
-    clearInterval(this.loop);
+    return newGrid;
   }
 
-  step(grid) {
-    //Check cells using rules
-    for (var i = 0; i < this.vertical / 20; i++) {
-      for (var j = 0; j < this.horizontal / 20; j++) {
-        //If Dead and Has 3 Neighbours, Cell Lives
-        if ((JSON.stringify(grid[i][j]) == JSON.stringify([0, true]) || JSON.stringify(grid[i][j]) == JSON.stringify([0, false])) && this.neighbour(i, j) === 3) {
-          this.nextGrid[i][j] = [1, this.red];
-        }
-        //If Alive and Has < 3 or > 2 Neighbours, Cell Dies
-        else if ((JSON.stringify(grid[i][j]) == JSON.stringify([1, true]) || JSON.stringify(grid[i][j]) == JSON.stringify([1, false])) && (this.neighbour(i, j) < 2 || this.neighbour(i, j) > 3)) {
-          this.nextGrid[i][j] = [0, this.red];
-        }
-        //If Alive and Has 2 Neighbours, Cell Lives
-        else if ((JSON.stringify(grid[i][j]) == JSON.stringify([1, true]) || JSON.stringify(grid[i][j]) == JSON.stringify([1, false])) && (this.neighbour(i, j) === 2 || this.neighbour(i, j) === 3)) {
-          this.nextGrid[i][j] = [1, this.red];
-        }
+  flattenGrid(grid: any[]): number[] {
+    let flattened = [];
+    for (let row of grid) {
+      for (let cell of row) {
+        flattened.push(cell[0]);
       }
     }
-
-    //Update the Grid and check Results
-    this.grid = this.nextGrid.slice(0);
-    this.checkWin(this.grid);
-
-    this.applyGrid();
-    return this.nextGrid.slice(0);
+    return flattened;
   }
 
-  monteCarloStep(grid) {
+  async generateTrainingData(): Promise<{
+    inputs: number[][];
+    labels: number[];
+  }> {
+    let inputs = [];
+    let labels = [];
 
-    var nextGrid = [];
+    console.log('Generating training data...');
 
-    //Create 2D Array
-    for (var i = 0; i < this.vertical / 20; i++) {
-      nextGrid[i] = [];
+    // Simulate a large number of games
+    for (let i = 0; i < 1000; i++) {
+      this.grid = this.createGrid(); // Random grid
+      let winner = this.checkWin(this.grid); // Determine the winner
+      let flattenedGrid = this.flattenGrid(this.grid); // Flatten grid for input
+
+      inputs.push(flattenedGrid);
+      labels.push(winner === true ? 1 : winner === false ? 0 : 0); // 1 for red, 0 for blue
     }
 
-    //Check cells using rules
-    for (var i = 0; i < this.vertical / 20; i++) {
-      for (var j = 0; j < this.horizontal / 20; j++) {
-        //If Dead and Has 3 Neighbours, Cell Lives
-        if ((JSON.stringify(grid[i][j]) == JSON.stringify([0, true]) || JSON.stringify(grid[i][j]) == JSON.stringify([0, false])) && this.neighbour(i, j) === 3) {
-          nextGrid[i][j] = [1, this.red];
-        }
-        //If Alive and Has < 3 or > 2 Neighbours, Cell Dies
-        else if ((JSON.stringify(grid[i][j]) == JSON.stringify([1, true]) || JSON.stringify(grid[i][j]) == JSON.stringify([1, false])) && (this.neighbour(i, j) < 2 || this.neighbour(i, j) > 3)) {
-          nextGrid[i][j] = [0, this.red];
-        }
-        //If Alive and Has 2 Neighbours, Cell Lives
-        else if ((JSON.stringify(grid[i][j]) == JSON.stringify([1, true]) || JSON.stringify(grid[i][j]) == JSON.stringify([1, false])) && (this.neighbour(i, j) === 2 || this.neighbour(i, j) === 3)) {
-          nextGrid[i][j] = [1, this.red];
-        }
+    console.log(`Generated ${inputs.length} training examples.`);
+    return { inputs, labels };
+  }
+
+  // Helper function to count the neighbors of a cell
+  neighbour(positionX: number, positionY: number): number {
+    let count = 0;
+    for (let x = positionX - 1; x <= positionX + 1; x++) {
+      for (let y = positionY - 1; y <= positionY + 1; y++) {
+        if (x === positionX && y === positionY) continue;
+        if (x < 0 || y < 0 || x >= this.grid.length || y >= this.grid[x].length)
+          continue;
+        if (this.grid[x][y][0] === 1) count++;
       }
     }
-
-    //Return the Next Step
-    return nextGrid.slice(0);
+    return count;
   }
 
   checkWin(grid) {
     var red = 0;
     var blue = 0;
-
     for (let i = 0; i < this.vertical / 20; i++) {
       for (let j = 0; j < this.horizontal / 20; j++) {
-        //If A Red Cell Is Found, Increase Its Count
-        if (JSON.stringify(grid[i][j]) === JSON.stringify([0, true]) || JSON.stringify(grid[i][j]) === JSON.stringify([1, true])) {
-          red++;
-        }
-        //If A Blue Cell Is Found, Increase Its Count
-        else if (JSON.stringify(grid[i][j]) === JSON.stringify([0, false]) || JSON.stringify(grid[i][j]) === JSON.stringify([1, false])) {
+        if (JSON.stringify(grid[i][j]) === JSON.stringify([1, true])) red++;
+        else if (JSON.stringify(grid[i][j]) === JSON.stringify([1, false]))
           blue++;
-        }
       }
     }
-
-    //If A Cell Type is Extinct, The Other Wins
-    if (red == 0) { console.log('Blue Wins!'); return true; } 
-    else if (blue == 0) { console.log('Red Wins!'); return false; } 
-    else if(JSON.stringify(this.nextGrid) === JSON.stringify(this.grid)){ console.log('Draw'); }
-  }
-
-  neighbour(positionX, positionY) {
-    let count = 0;
-    let red = 0;
-    let blue = 0;
-
-    for (var x = positionX - 1; x <= positionX + 1; x++) {
-      for (var y = positionY - 1; y <= positionY + 1; y++) {
-        //If we are on the current cell, do nothing
-        if (x == positionX && y == positionY) {continue;}
-
-        //If we are out of bounds, do nothing
-        if (x < 0 || y < 0 || x >= this.grid.length || y >= this.grid[x].length) {continue;}
-
-        //If cells are alive and red, increment appropriately
-        if (JSON.stringify(this.grid[x][y]) === JSON.stringify([1, true])) {
-          count++;
-          red++;
-        } 
-        
-        //If cells are alive and blue, increment appropriately
-        else if (JSON.stringify(this.grid[x][y]) === JSON.stringify([1, false])) {
-          count++;
-          blue++;
-        }
-      }
-    }
-
-    if (red > blue) {
-      this.red = true;
-    } else if (red < blue) {
-      this.red = false;
-    } else if (red === blue) {
-    }
-
-    return count;
-  }
-
-  monteCarlo(depth, grid) {
-    if (this.checkWin(grid)) {
-      return true;
-    }
-    if (depth === 0) {
-      return false;
-    } else {
-      //step the local grid alone
-      var clone = Object.assign({}, grid);
-      clone = this.monteCarloStep(clone);
-
-      //Run this but stepped
-      this.monteCarlo(depth - 1, clone);
-    }
+    let winner =
+      red > 0 ? (blue === 0 ? true : null) : red === 0 ? false : null;
+    return winner;
   }
 }
